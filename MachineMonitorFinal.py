@@ -1,29 +1,57 @@
 import matplotlib as mpl
 mpl.use('TkAgg')
 
-import random
+import datetime
+import os.path 
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import _stale_figure_callback
+from pathlib import Path
 
 
-# CHANGE THESE TO AFFECT PROGram
-BATCHES = [[1,2], [3,4], [5,6], [7,8,9]]
-FILE_PREFIX = "File"
+# CHANGE THESE TO AFFECT PROGRAM
+BATCHES = [[10,20], [30,40], [50,60], [70,80]]
+FILE_PREFIX = "measure"
 FILE_SUFFIX = ".txt"
 datetrack = []
 
 fig = plt.figure(facecolor='#151515')
 ax1 = plt.subplot2grid((1,1), (0,0))
 
-
-for batch in BATCHES:
-
+def file_search(): #In Future: ad option for either day, week, month, year
+    #Parameters: num, unit, daily_samples ---- Convert everything to days
+    now = datetime.datetime.now()
+    on = True 
+    temp = [] #Temporary storage of filenames
     filenames = []
-    # generate file names
-    for i in range(batch[0], batch[-1]+1):
-        filenames.append(FILE_PREFIX + str(i) + FILE_SUFFIX)  #filenames = ["File1.txt", "File2.txt", "File.txt", "..."]
+    n = 10
+    
+    while on is True:
+        file_id = FILE_PREFIX + str(n) + FILE_SUFFIX
+
+        if os.path.isfile(file_id):
+            
+            temp.append(FILE_PREFIX + str(n) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
+            n += 1
+            
+        else:
+            on = False
+
+    if len(temp) > num_of_files:
+        for i in range(num_of_files + 1):
+            
+            #remove 
+            
+    return filenames
+
+
+filenames = file_search()
+print(filenames)
+
+    
+def get_data(filenames):
+        
     rmsgs = []
     pkpks = []
     #iterate files and harvest data
@@ -63,7 +91,7 @@ for batch in BATCHES:
         #print(total/len(rows))
 
 
-    #chacking if date is same throuhgout
+    #checking if date is same throuhgout
         if dates[0] != dates[len(dates)-1]:
             print('We have a problem')
         else:
@@ -74,16 +102,20 @@ for batch in BATCHES:
    # print(rmsgs)
    # print(pkpks)
 
+        file = open(date + FILE_SUFFIX, 'w+')
 
-    file = open(date + FILE_SUFFIX, 'w')
+        file.write("Averages of samples taken throughout the day: " + date)
+        file.write('\n')
+        file.write('"Root Mean Square", "Peak to Peak"\n')
+        for i in range(len(rmsgs)):
+            file.write("{}, {}\n".format(rmsgs[i], pkpks[i]))
 
-    file.write("Averages of samples taken throughout the day: " + date)
-    file.write('\n')
-    file.write('"Root Mean Square", "Peak to Peak"\n')
-    for i in range(len(rmsgs)):
-        file.write("{}, {}\n".format(rmsgs[i], pkpks[i]))
+    return datetrack
 
-filedates = set(datetrack)
+filedates = set(get_data(filenames))
+
+
+
 
 
 #print(filedates)
@@ -95,16 +127,16 @@ for filedate in filedates:
     csv_reader = csv.reader(file)
     next(csv_reader)
     next(csv_reader)
-    dayrmsn = []
-    daypkpkn = []
+    dayrmsn = []    
+    daypkpkn = []   
     for row in csv_reader:
 
-        dayrmsn.append(row[0])
-        daypkpkn.append(row[1])
+        dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+        daypkpkn.append(row[1]) #Adding contents of row[1] to a list of Strings
 
 
-    dayrms = [float(i) for i in dayrmsn]
-    daypkpk = [float(i) for i in daypkpkn]
+    dayrms = [float(i) for i in dayrmsn]    #Converting Strings in dayrmsn to float values and storing them in a new list dayrms
+    daypkpk = [float(i) for i in daypkpkn]  #Converting Strings in daypkpkn to float values and storing them in a new list daypkpk
 
     r = np.mean(dayrms)
     p = np.mean(daypkpk)
@@ -132,7 +164,9 @@ plotp = [random.randint(75,100) for r in range(50)]
 
 x = range(0,50)
 '''
-x = [0,1,2,3]
+
+x = list(filedates)
+
 
 for label in ax1.xaxis.get_ticklabels():
     label.set_rotation(45)
