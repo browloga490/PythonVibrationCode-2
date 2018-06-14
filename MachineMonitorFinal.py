@@ -33,6 +33,7 @@ def file_search():
     file = open('storage.txt', 'r+') #Open file to grab list of filenames and next number
     filenames = ast.literal_eval(file.readline()) #Temporary storage of filenames
     file_num = int(ast.literal_eval(file.readline())) #Set file_num equal to the last file number + 1
+    count = 0
     
     while on is True:
         file_id = FILE_PREFIX + str(file_num) + FILE_SUFFIX
@@ -41,17 +42,19 @@ def file_search():
             
             filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
             file_num += 1
+            count += 1
             
         else:
             on = False
 
     #Store filenames 
 
-    file.truncate(0)
-    file.seek(0)
-    file.write(str(filenames)+'\n')
-    file.write(str(file_num + 1))
-    file.close()
+    if count > 0:
+        file.truncate(0)
+        file.seek(0)
+        file.write(str(filenames)+'\n')
+        file.write(str(file_num))
+        file.close()
 
     return filenames
 
