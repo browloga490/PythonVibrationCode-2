@@ -1,6 +1,7 @@
 import matplotlib as mpl
 mpl.use('TkAgg')
 
+import matplotlib.dates as dates
 import ast
 import datetime
 import os.path 
@@ -66,13 +67,15 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
     pkpks = []
     #iterate files and harvest data
     #'filenames' is the list of files being analyzed
+    output_send = []
     for filename in filenames:
         file = open(filename, 'r')
 
         file.readline()
         file.readline()
         gs =[]
-        dates = []
+        date_list = []
+        x_axis = []
 
         rows = file.readlines()
 
@@ -84,7 +87,7 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
                 if count == 1:
                     gs.append(float(col)) #(word.strip()) is an alternative
                 elif count == 2:
-                    dates.append(col)
+                    date_list.append(col)
                 count += 1
 
         total = 0.0
@@ -102,11 +105,13 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
 
 
     #checking if date is same throuhgout
-        if dates[0] != dates[len(dates)-1]:
+        if date_list[0] != date_list[len(date_list)-1]:
             print('We have a problem')
         else:
-            date = dates[0] #make variable "date" the first entry in the date column
+            date = date_list[0] #make variable "date" the first entry in the date column
             datetrack.append(date)
+            #x_axis.extend(dates.datestr2num(date))
+            # where date is '01/02/1991'
         file.close()
 
    # print(rmsgs)
@@ -120,9 +125,15 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
         for i in range(len(rmsgs)):
             file.write("{}, {}\n".format(rmsgs[i], pkpks[i]))
 
+    #output_send.append(datetrack)
+    #output_send.append(x_axis)
+
     return datetrack
 
-filedates = set(get_data(filenames))
+#output_recieve = get_data(filenames)
+
+filedates = get_data(filenames)
+
 
 
 
@@ -133,7 +144,7 @@ plotr = []
 plotp = []
 
 for filedate in filedates:
-    file = open(filedate + FILE_SUFFIX, 'r')
+    file = open(str(filedate) + FILE_SUFFIX, 'r')
     csv_reader = csv.reader(file)
     next(csv_reader)
     next(csv_reader)
@@ -175,22 +186,19 @@ plotp = [random.randint(75,100) for r in range(50)]
 x = range(0,50)
 '''
 
-x = list(filedates)
-
-
 for label in ax1.xaxis.get_ticklabels():
     label.set_rotation(45)
 ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
 
-ax1.plot(x, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
-ax1.plot(x, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+ax1.plot(filedates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
+ax1.plot(filedates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
 
 ax1.legend()
 leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
 leg.get_frame().set_alpha(0.4)
 
-ax1.fill_between(x, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
-ax1.fill_between(x, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
+ax1.fill_between(filedates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
+ax1.fill_between(filedates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
 
 ax1.xaxis.label.set_color('w')
 ax1.yaxis.label.set_color('w')
