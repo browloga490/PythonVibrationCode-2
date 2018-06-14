@@ -1,6 +1,7 @@
 import matplotlib as mpl
 mpl.use('TkAgg')
 
+import ast
 import datetime
 import os.path 
 import csv
@@ -19,30 +20,38 @@ datetrack = []
 fig = plt.figure(facecolor='#151515')
 ax1 = plt.subplot2grid((1,1), (0,0))
 
-def file_search(): #In Future: ad option for either day, week, month, year
-    #Parameters: num, unit, daily_samples ---- Convert everything to days
-    now = datetime.datetime.now()
-    on = True 
-    temp = [] #Temporary storage of filenames
-    filenames = []
-    n = 10
+
+#file = open('Storage.txt', 'r')
+#filenames = ast.literal_eval(file.readline())
+#print(filenames)
+#print(filenames[4])
+
+def file_search(): 
+    
+    on = True
+    file = open('storage.txt', 'r+') #Open file to grab list of filenames and next number
+    filenames = ast.literal_eval(file.readline()) #Temporary storage of filenames
+    file_num = int(ast.literal_eval(file.readline())) #Set file_num equal to the last file number + 1
     
     while on is True:
-        file_id = FILE_PREFIX + str(n) + FILE_SUFFIX
+        file_id = FILE_PREFIX + str(file_num) + FILE_SUFFIX
 
         if os.path.isfile(file_id):
             
-            temp.append(FILE_PREFIX + str(n) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
-            n += 1
+            filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
+            file_num += 1
             
         else:
             on = False
 
-    if len(temp) > num_of_files:
-        for i in range(num_of_files + 1):
-            
-            #remove 
-            
+    #Store filenames 
+
+    file.truncate(0)
+    file.seek(0)
+    file.write(str(filenames)+'\n')
+    file.write(str(file_num + 1))
+    file.close()
+
     return filenames
 
 
@@ -50,8 +59,9 @@ filenames = file_search()
 print(filenames)
 
     
-def get_data(filenames):
-        
+def get_data(filenames): #In Future: ad option for either day, week, month, year
+    #Parameters: num, unit, daily_samples ---- Convert everything to days
+    now = datetime.datetime.now()
     rmsgs = []
     pkpks = []
     #iterate files and harvest data
