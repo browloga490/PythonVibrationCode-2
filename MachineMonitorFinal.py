@@ -16,8 +16,6 @@ from pathlib import Path
 BATCHES = [[10,20], [30,40], [50,60], [70,80]]
 FILE_PREFIX = "measure"
 FILE_SUFFIX = ".txt"
-datetrack = []
-
 fig = plt.figure(facecolor='#151515')
 ax1 = plt.subplot2grid((1,1), (0,0))
 
@@ -66,11 +64,13 @@ print(filenames)
 def get_data(filenames): #In Future: ad option for either day, week, month, year
     #Parameters: num, unit, daily_samples ---- Convert everything to days
     now = datetime.datetime.now()
+    datetrack = []
+    plotr = []
+    plotp = []
     rmsgs = []
     pkpks = []
     #iterate files and harvest data
     #'filenames' is the list of files being analyzed
-    output_send = []
     for filename in filenames:
         file = open(filename, 'r')
 
@@ -104,10 +104,9 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
 
         pkpks.append(pk)
         rmsgs.append(total/len(rows))
-        #print(total/len(rows))
 
 
-    #checking if date is same throuhgout
+        #checking if date is same throuhgout
         if date_list[0] != date_list[len(date_list)-1]:
             print('We have a problem')
         else:
@@ -120,59 +119,81 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
    # print(rmsgs)
    # print(pkpks)
 
-        file = open(date + FILE_SUFFIX, 'w+')
+        #Write to master data file here
 
-        file.write("Averages of samples taken throughout the day: " + date)
-        file.write('\n')
-        file.write('"Root Mean Square", "Peak to Peak"\n')
-        for i in range(len(rmsgs)):
-            file.write("{}, {}\n".format(rmsgs[i], pkpks[i]))
+##        file = open(date + FILE_SUFFIX, 'w+')
+##
+##        file.write("Averages of samples taken throughout the day: " + date)
+##        file.write('\n')
+##        file.write('"Root Mean Square", "Peak to Peak"\n')
+##        for i in range(len(rmsgs)):
+##            file.write("{}, {}\n".format(rmsgs[i], pkpks[i]))
 
-    #output_send.append(datetrack)
-    #output_send.append(x_axis)
+        #rmsgs_f = [float(i) for i in rmsgs]    #Converting Strings in dayrmsn to float values and storing them in a new list dayrms
+        #pkpks_f = [float(i) for i in pkpks]  #Converting Strings in daypkpkn to float values and storing them in a new list daypkpk
 
-    return datetrack
+        r = np.mean(rmsgs)
+        p = np.mean(pkpks)
+
+        plotr.append(r)
+        plotp.append(p)
+
+        print(plotr)
+        print(plotp)
+
+    return datetrack, plotr, plotp
+
+##    for filedate in datetrack:
+##        file = open(str(filedate) + FILE_SUFFIX, 'r')
+##        csv_reader = csv.reader(file)
+##        next(csv_reader)
+##        next(csv_reader)
+##        dayrmsn = []    
+##        daypkpkn = []   
+##        for row in csv_reader:
+##
+##            dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+##            daypkpkn.append(row[1]) #Adding contents of row[1] to a list of Strings
+
+
+
+
+
+        
 
 #output_recieve = get_data(filenames)
 
-filedates = get_data(filenames)
-
-
-
-
-
+filedates, plotr, plotp = get_data(filenames)
 
 #print(filedates)
-plotr = []
-plotp = []
 
-for filedate in filedates:
-    file = open(str(filedate) + FILE_SUFFIX, 'r')
-    csv_reader = csv.reader(file)
-    next(csv_reader)
-    next(csv_reader)
-    dayrmsn = []    
-    daypkpkn = []   
-    for row in csv_reader:
-
-        dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
-        daypkpkn.append(row[1]) #Adding contents of row[1] to a list of Strings
-
-
-    dayrms = [float(i) for i in dayrmsn]    #Converting Strings in dayrmsn to float values and storing them in a new list dayrms
-    daypkpk = [float(i) for i in daypkpkn]  #Converting Strings in daypkpkn to float values and storing them in a new list daypkpk
-
-    r = np.mean(dayrms)
-    p = np.mean(daypkpk)
-
-    plotr.append(r)
-    plotp.append(p)
-
-print(plotr)
-print(plotp)
-print(filedates)
-
-file.close()
+##for filedate in filedates:
+##    file = open(str(filedate) + FILE_SUFFIX, 'r')
+##    csv_reader = csv.reader(file)
+##    next(csv_reader)
+##    next(csv_reader)
+##    dayrmsn = []    
+##    daypkpkn = []   
+##    for row in csv_reader:
+##
+##        dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+##        daypkpkn.append(row[1]) #Adding contents of row[1] to a list of Strings
+##
+##
+##    dayrms = [float(i) for i in dayrmsn]    #Converting Strings in dayrmsn to float values and storing them in a new list dayrms
+##    daypkpk = [float(i) for i in daypkpkn]  #Converting Strings in daypkpkn to float values and storing them in a new list daypkpk
+##
+##    r = np.mean(dayrms)
+##    p = np.mean(daypkpk)
+##
+##    plotr.append(r)
+##    plotp.append(p)
+##
+##print(plotr)
+##print(plotp)
+##print(filedates)
+##
+##file.close()
 '''
 
 NOT USING RIGHT NOW

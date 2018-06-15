@@ -1,0 +1,2 @@
+Averages of samples taken:
+"Root Mean Square", "Peak to Peak"
