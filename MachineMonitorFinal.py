@@ -28,6 +28,7 @@ ax1 = plt.subplot2grid((1,1), (0,0))
 #print(filenames[4])
 
 def prepend(filename, line):
+    
     with open(filename, 'r+') as file:
         csv_reader = csv.reader(file)
         next(csv_reader)
@@ -71,13 +72,12 @@ def file_search():
     return filenames
 
 
-filenames = file_search()
+#filenames = file_search()
 #print(filenames)
 
     
-def get_data(filenames): #In Future: ad option for either day, week, month, year
-    #Parameters: num, unit, daily_samples ---- Convert everything to days
-    now = datetime.datetime.now()
+def get_data(filenames):
+    
     rmsgs = []
     pkpks = []
     #iterate files and harvest data
@@ -125,6 +125,7 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
         else:
             date = date_list[0] #make variable "date" the first entry in the date column
             datetrack.append(date)
+            print(date)
             #x_axis.extend(dates.datestr2num(date))
             # where date is '01/02/1991'
         file.close()
@@ -134,17 +135,13 @@ def get_data(filenames): #In Future: ad option for either day, week, month, year
 
         
         #file = open('master_mem.txt','w')
-        for i in range(len(rmsgs)):
-            prepend('master_mem.txt',"{}, {}, {}".format(rmsgs[i], pkpks[i], datetrack[i]))
+    for i in range(len(rmsgs)):
+        prepend('master_mem.txt',"{}, {}, {}".format(rmsgs[i], pkpks[i], datetrack[i]))
 
-    #output_send.append(datetrack)
-    #output_send.append(x_axis)
-
+    print(datetrack)
     return datetrack
 
-#output_recieve = get_data(filenames)
-
-filedates = get_data(filenames)
+#filedates = list(set(get_data(filenames)))
 
 
 
@@ -152,8 +149,114 @@ filedates = get_data(filenames)
 
 
 #print(filedates)
-plotr = []
-plotp = []
+#plotr = []
+#plotp = []
+
+
+def build_graph(scope):
+
+    now = datetime.date.today()
+    
+    temp = now - datetime.timedelta(days=scope)
+    #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
+    last_date = '03-22-18'
+    
+    file = open('master_mem.txt', 'r')
+    csv_reader = csv.reader(file)
+    next(csv_reader)
+    next(csv_reader)
+    temp = next(csv_reader)
+    print(temp)
+    
+    dayrmsn = []    
+    daypkpkn = []
+    dates = []
+    plotr = []
+    plotp = []
+
+    dayrmsn.append(temp[0])
+    daypkpkn.append(temp[1])
+    dates.append(temp[2].strip())
+
+    for row in csv_reader:
+
+        if row[2].strip() >= last_date:
+        
+            if row[2].strip() == dates[len(dates)-1]:
+                
+                dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+                daypkpkn.append(row[1])
+                
+            else:
+                r = np.mean([float(i) for i in dayrmsn]) 
+                p = np.mean([float(i) for i in daypkpkn])
+
+                plotr.append(r)
+                plotp.append(p)
+
+                dayrmsn = [row[0]]    
+                daypkpkn = [row[1]]
+                
+                dates.append(row[2].strip())
+
+        else:
+            r = np.mean([float(i) for i in dayrmsn]) 
+            p = np.mean([float(i) for i in daypkpkn])
+
+            plotr.append(r)
+            plotp.append(p)
+
+            dayrmsn = [row[0]]    
+            daypkpkn = [row[1]]
+            
+            dates.append(row[2].strip())
+
+    file.close()
+    filedates.sort()
+    
+    plotr = list(reversed(plotr))
+    plotp = list(reversed(plotp))
+                
+    for label in ax1.xaxis.get_ticklabels():
+        label.set_rotation(45)
+    ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
+
+    ax1.plot(filedates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
+    ax1.plot(filedates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+
+    ax1.legend()
+    leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
+    leg.get_frame().set_alpha(0.4)
+
+    ax1.fill_between(filedates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
+    ax1.fill_between(filedates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
+
+    ax1.xaxis.label.set_color('w')
+    ax1.yaxis.label.set_color('w')
+    ax1.spines['bottom'].set_color('grey')
+    ax1.spines['top'].set_color('grey')
+    ax1.spines['left'].set_color('#151515')
+    ax1.spines['right'].set_color('#151515')
+
+    ax1.tick_params(axis='y', colors='w')
+    ax1.tick_params(axis='x', colors='w')
+
+    ax = plt.gca()
+    ax.set_ylim([0, 1.2*max(plotp)])
+    ax.set_facecolor('#151515')
+
+    plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
+
+    plt.xlabel('Date')
+    plt.ylabel('g s')
+    plt.title('Machine Health Monitor', color='w')
+    plt.show()        
+    
+
+
+
+'''
+#NOT USING RIGHT NOW
 
 for filedate in filedates:
     file = open(str(filedate) + FILE_SUFFIX, 'r')
@@ -176,12 +279,12 @@ for filedate in filedates:
 
     plotr.append(r)
     plotp.append(p)
-
+'''
 #print(plotr)
 #print(plotp)
 #print(filedates)
 
-file.close()
+#file.close()
 '''
 
 NOT USING RIGHT NOW
@@ -198,37 +301,63 @@ plotp = [random.randint(75,100) for r in range(50)]
 x = range(0,50)
 '''
 
-for label in ax1.xaxis.get_ticklabels():
-    label.set_rotation(45)
-ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
+##for label in ax1.xaxis.get_ticklabels():
+##    label.set_rotation(45)
+##ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
+##
+##ax1.plot(filedates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
+##ax1.plot(filedates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+##
+##ax1.legend()
+##leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
+##leg.get_frame().set_alpha(0.4)
+##
+##ax1.fill_between(filedates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
+##ax1.fill_between(filedates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
+##
+##ax1.xaxis.label.set_color('w')
+##ax1.yaxis.label.set_color('w')
+##ax1.spines['bottom'].set_color('grey')
+##ax1.spines['top'].set_color('grey')
+##ax1.spines['left'].set_color('#151515')
+##ax1.spines['right'].set_color('#151515')
+##
+##ax1.tick_params(axis='y', colors='w')
+##ax1.tick_params(axis='x', colors='w')
+##
+##ax = plt.gca()
+##ax.set_ylim([0, 1.2*max(plotp)])
+##ax.set_facecolor('#151515')
+##
+##plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
+##
+##plt.xlabel('Date')
+##plt.ylabel('g s')
+##plt.title('Machine Health Monitor', color='w')
+##plt.show()
 
-ax1.plot(filedates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
-ax1.plot(filedates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+filenames = file_search()
+#print(filenames)
 
-ax1.legend()
-leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
-leg.get_frame().set_alpha(0.4)
+filedates = list(set(get_data(filenames)))
 
-ax1.fill_between(filedates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
-ax1.fill_between(filedates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
+build_graph(365)
 
-ax1.xaxis.label.set_color('w')
-ax1.yaxis.label.set_color('w')
-ax1.spines['bottom'].set_color('grey')
-ax1.spines['top'].set_color('grey')
-ax1.spines['left'].set_color('#151515')
-ax1.spines['right'].set_color('#151515')
 
-ax1.tick_params(axis='y', colors='w')
-ax1.tick_params(axis='x', colors='w')
 
-ax = plt.gca()
-ax.set_ylim([0, 1.2*max(plotp)])
-ax.set_facecolor('#151515')
 
-plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
 
-plt.xlabel('Date')
-plt.ylabel('g s')
-plt.title('Machine Health Monitor', color='w')
-plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
