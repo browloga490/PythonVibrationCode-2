@@ -16,7 +16,7 @@ from pathlib import Path
 BATCHES = [[10,20], [30,40], [50,60], [70,80]]
 FILE_PREFIX = "measure"
 FILE_SUFFIX = ".txt"
-datetrack = []
+
 
 fig = plt.figure(facecolor='#151515')
 ax1 = plt.subplot2grid((1,1), (0,0))
@@ -41,10 +41,12 @@ def prepend(filename, line):
 def file_search(): 
     
     on = True
+    change = False
+    
     file = open('storage.txt', 'r+') #Open file to grab list of filenames and next number
     filenames = ast.literal_eval(file.readline()) #Temporary storage of filenames
     file_num = int(ast.literal_eval(file.readline())) #Set file_num equal to the last file number + 1
-    count = 0
+    
     new_filenames = []
     
     while on is True:
@@ -55,21 +57,21 @@ def file_search():
             filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
             new_filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)
             file_num += 1
-            count += 1
+            change = True
             
         else:
             on = False
 
     #Store filenames 
 
-    if count > 0:
+    if change is True:
         file.truncate(0)
         file.seek(0)
         file.write(str(filenames)+'\n')
         file.write(str(file_num))
         file.close()
 
-    return filenames
+    return new_filenames
 
 
 #filenames = file_search()
@@ -80,65 +82,68 @@ def get_data(filenames):
     
     rmsgs = []
     pkpks = []
+    datetrack = []
+
     #iterate files and harvest data
     #'filenames' is the list of files being analyzed
     output_send = []
-    for filename in filenames:
-        file = open(filename, 'r')
 
-        file.readline()
-        file.readline()
-        gs =[]
-        date_list = []
-        x_axis = []
+    if len(filenames) != 0:
+        for filename in filenames:
+            file = open(filename, 'r')
 
-        rows = file.readlines()
+            file.readline()
+            file.readline()
+            gs =[]
+            date_list = []
+            x_axis = []
 
-        for row in rows:
-            cols = row.split(",")
-            count = 0
+            rows = file.readlines()
 
-            for col in cols:
-                if count == 1:
-                    gs.append(float(col)) #(word.strip()) is an alternative
-                elif count == 2:
-                    date_list.append(col)
-                count += 1
+            for row in rows:
+                cols = row.split(",")
+                count = 0
 
-        total = 0.0
+                for col in cols:
+                    if count == 1:
+                        gs.append(float(col)) #(word.strip()) is an alternative
+                    elif count == 2:
+                        date_list.append(col)
+                    count += 1
 
-        for g in gs:
-            total += abs(g)
+            total = 0.0
 
-            max_gs = max(gs)
-            min_gs = min(gs)
-            pk = (max_gs - min_gs)
+            for g in gs:
+                total += abs(g)
 
-        pkpks.append(pk)
-        rmsgs.append(total/len(rows))
-        #print(total/len(rows))
+                max_gs = max(gs)
+                min_gs = min(gs)
+                pk = (max_gs - min_gs)
+
+            pkpks.append(pk)
+            rmsgs.append(total/len(rows))
+            #print(total/len(rows))
 
 
-    #checking if date is same throuhgout
-        if date_list[0] != date_list[len(date_list)-1]:
-            print('We have a problem')
-        else:
-            date = date_list[0] #make variable "date" the first entry in the date column
-            datetrack.append(date)
-            print(date)
-            #x_axis.extend(dates.datestr2num(date))
-            # where date is '01/02/1991'
-        file.close()
+        #checking if date is same throuhgout
+            if date_list[0] != date_list[len(date_list)-1]:
+                print('We have a problem')
+            else:
+                date = date_list[0] #make variable "date" the first entry in the date column
+                datetrack.append(date)
+                print(date)
+                #x_axis.extend(dates.datestr2num(date))
+                # where date is '01/02/1991'
+            file.close()
 
-        #print(rmsgs)
-        #print(pkpks)
+            #print(rmsgs)
+            #print(pkpks)
 
-        
-        #file = open('master_mem.txt','w')
-    for i in range(len(rmsgs)):
-        prepend('master_mem.txt',"{}, {}, {}".format(rmsgs[i], pkpks[i], datetrack[i]))
+            
+            #file = open('master_mem.txt','w')
+        for i in range(len(rmsgs)):
+            prepend('master_mem.txt',"{}, {}, {}".format(rmsgs[i], pkpks[i], datetrack[i]))
 
-    print(datetrack)
     return datetrack
 
 #filedates = list(set(get_data(filenames)))
@@ -212,7 +217,9 @@ def build_graph(scope):
             dates.append(row[2].strip())
 
     file.close()
-    filedates.sort()
+    dates.sort()
+    dates.pop()
+    print(dates)
     
     plotr = list(reversed(plotr))
     plotp = list(reversed(plotp))
@@ -221,15 +228,15 @@ def build_graph(scope):
         label.set_rotation(45)
     ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
 
-    ax1.plot(filedates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
-    ax1.plot(filedates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+    ax1.plot(dates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
+    ax1.plot(dates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
 
     ax1.legend()
     leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
     leg.get_frame().set_alpha(0.4)
 
-    ax1.fill_between(filedates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
-    ax1.fill_between(filedates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
+    ax1.fill_between(dates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)
+    ax1.fill_between(dates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
 
     ax1.xaxis.label.set_color('w')
     ax1.yaxis.label.set_color('w')
