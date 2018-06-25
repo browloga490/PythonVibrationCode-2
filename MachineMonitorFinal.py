@@ -1,31 +1,20 @@
 import matplotlib as mpl
 mpl.use('TkAgg')
 
-import scipy
 import scipy.fftpack
 import matplotlib.dates as dates
 import ast
 import datetime
-import os.path 
+import os 
 import csv
 import shutil
 import numpy as np
 import matplotlib.pyplot as plt
-#import glob
-from matplotlib.figure import _stale_figure_callback
-#from pathlib import Path
 
 
-# CHANGE THESE TO AFFECT PROGRAM
-BATCHES = [[10,20], [30,40], [50,60], [70,80]]
+# CONSTANTS
 FILE_PREFIX = "data_store/"
-FILE_SUFFIX = ".txt"
 
-
-#file = open('Storage.txt', 'r')
-#filenames = ast.literal_eval(file.readline())
-#print(filenames)
-#print(filenames[4])
 
 def prepend(filename, line):
     
@@ -37,6 +26,7 @@ def prepend(filename, line):
         file.seek(67, 0)
         file.write('\n' + line.rstrip('\r\n') + '\n' + content)
         file.close()
+
 
 def file_search(): 
     
@@ -62,10 +52,6 @@ def file_search():
     return new_filenames
 
 
-#filenames = file_search()
-#print(filenames)
-
-    
 def get_data(filenames):
     
     rmsgs = []
@@ -110,40 +96,21 @@ def get_data(filenames):
 
             pkpks.append(pk)
             rmsgs.append(total/len(rows))
-            #print(total/len(rows))
 
-
-        #checking if date is same throuhgout
-            if date_list[0] != date_list[len(date_list)-1]:
+            if date_list[0] != date_list[len(date_list)-1]: #checking if date is same throuhgout
                 print('We have a problem')
             else:
                 date = date_list[0] #make variable "date" the first entry in the date column
                 datetrack.append(date)
-                print(date)
                 #x_axis.extend(dates.datestr2num(date))
                 # where date is '01/02/1991'
+                
             file.close()
 
-            #print(rmsgs)
-            #print(pkpks)
-
-            
-            #file = open('master_mem.txt','w')
         for i in range(len(rmsgs)):
             prepend('master_mem.txt',"{}, {}, {}".format(rmsgs[i], pkpks[i], datetrack[i]))
 
     return datetrack
-
-#filedates = list(set(get_data(filenames)))
-
-
-
-
-
-
-#print(filedates)
-#plotr = []
-#plotp = []
 
 
 def build_graph(scope):
@@ -151,7 +118,10 @@ def build_graph(scope):
     now = datetime.date.today()
     
     temp = now - datetime.timedelta(days=scope)
+    
+    ##THE LINE BELOW SHOULD BE IMPLEMENTED WHEN WE HAVE NEW DATA##
     #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
+    
     last_date = '03-22-18'
     
     file = open('master_mem.txt', 'r')
@@ -265,7 +235,6 @@ def build_fft_graph(N,T):
     next(csv_reader)
     file.close()
 
-    #file = open(FILE_PREFIX + str(file_num) + FILE_SUFFIX)
     file = open(FILE_PREFIX + '50HzTXT.txt')
     file.readline()
     file.readline()
@@ -286,12 +255,9 @@ def build_fft_graph(N,T):
                 gs.append(float(col))
                 break
             count += 1
-
-    #fig = plt.figure()
-
     
-    x = sec #np.linspace(0.0, N*T, N)
-    y = gs #np.sin(50.0 * 2.0*np.pi*x) + 0.5*np.sin(80.0 * 2.0*np.pi*x)
+    x = sec
+    y = gs
     yf = scipy.fftpack.fft(y)
     xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
 
@@ -299,13 +265,10 @@ def build_fft_graph(N,T):
     ax.plot(xf,2.0/N * np.abs(yf[:N//2]))
     plt.show()
 
-    #plt.plot([1, 23, 2, 4])
-    #plt.ylabel('some numbers')
 
-
+#START OF PROGRAM#
 
 filenames = file_search()
-#print(filenames)
 
 filedates = list(set(get_data(filenames)))
 
@@ -313,7 +276,7 @@ build_graph(365)
 build_fft_graph(2500,8/2000)
 
 
-
+#END OF PROGRAM#
 
 
 
