@@ -10,9 +10,9 @@ import os.path
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-import glob
+#import glob
 from matplotlib.figure import _stale_figure_callback
-from pathlib import Path
+#from pathlib import Path
 
 
 # CHANGE THESE TO AFFECT PROGRAM
