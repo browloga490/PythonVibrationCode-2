@@ -8,6 +8,7 @@ import ast
 import datetime
 import os.path 
 import csv
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 #import glob
@@ -17,7 +18,7 @@ from matplotlib.figure import _stale_figure_callback
 
 # CHANGE THESE TO AFFECT PROGRAM
 BATCHES = [[10,20], [30,40], [50,60], [70,80]]
-FILE_PREFIX = "measure"
+FILE_PREFIX = "data_store/"
 FILE_SUFFIX = ".txt"
 
 
@@ -39,35 +40,23 @@ def prepend(filename, line):
 
 def file_search(): 
     
-    on = True
-    change = False
-    
     file = open('storage.txt', 'r+') #Open file to grab list of filenames and next number
     filenames = ast.literal_eval(file.readline()) #Temporary storage of filenames
-    file_num = int(ast.literal_eval(file.readline())) #Set file_num equal to the last file number + 1
     
-    new_filenames = []
+    new_filenames = os.listdir('new_data/')
+    filenames.extend(new_filenames)
     
-    while on is True:
-        file_id = FILE_PREFIX + str(file_num) + FILE_SUFFIX
-
-        if os.path.isfile(file_id):
-            
-            filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)  #temp = ["measure10.txt", "measure11.txt", "measure12.txt", "..."]
-            new_filenames.append(FILE_PREFIX + str(file_num) + FILE_SUFFIX)
-            file_num += 1
-            change = True
-            
-        else:
-            on = False
 
     #Store filenames 
 
-    if change is True:
+    if len(new_filenames) > 0:
+        
+        for name in new_filenames:
+            shutil.move('new_data/'+name, 'data_store/')
+        
         file.truncate(0)
         file.seek(0)
         file.write(str(filenames)+'\n')
-        file.write(str(file_num))
         file.close()
 
     return new_filenames
@@ -89,7 +78,7 @@ def get_data(filenames):
 
     if len(filenames) != 0:
         for filename in filenames:
-            file = open(filename, 'r')
+            file = open(FILE_PREFIX + filename, 'r')
 
             file.readline()
             file.readline()
@@ -270,21 +259,19 @@ def build_graph(scope):
     plt.show()
 
 
-def build_fft_graph(N):
+def build_fft_graph(N,T):
     file = open('storage.txt', 'r+')
     csv_reader = csv.reader(file)
     next(csv_reader)
-    file_num = int(ast.literal_eval(file.readline())) - 1
     file.close()
 
     #file = open(FILE_PREFIX + str(file_num) + FILE_SUFFIX)
-    file = open('50HzTXT.txt')
+    file = open(FILE_PREFIX + '50HzTXT.txt')
     file.readline()
     file.readline()
     
     sec = []
     gs = []
-    T = 8/2000
 
     rows = file.readlines()
 
@@ -303,13 +290,13 @@ def build_fft_graph(N):
     #fig = plt.figure()
 
     
-    x = np.linspace(0.0, N*T, N)
-    y = np.sin(50.0 * 2.0*np.pi*x) + 0.5*np.sin(80.0 * 2.0*np.pi*x)
+    x = sec #np.linspace(0.0, N*T, N)
+    y = gs #np.sin(50.0 * 2.0*np.pi*x) + 0.5*np.sin(80.0 * 2.0*np.pi*x)
     yf = scipy.fftpack.fft(y)
     xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
 
     fig, ax = plt.subplots()
-    ax.plot(xf, 2.0/N * np.abs(yf[:N//2]))
+    ax.plot(xf,2.0/N * np.abs(yf[:N//2]))
     plt.show()
 
     #plt.plot([1, 23, 2, 4])
@@ -323,7 +310,7 @@ filenames = file_search()
 filedates = list(set(get_data(filenames)))
 
 build_graph(365)
-build_fft_graph(2500)
+build_fft_graph(2500,8/2000)
 
 
 
