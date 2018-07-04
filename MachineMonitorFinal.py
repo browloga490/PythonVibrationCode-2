@@ -17,25 +17,49 @@ from matplotlib.colors import Colormap
 # CONSTANTS
 FILE_PREFIX = "data_store/"
 
+good = [['darkgreen','green'],['green','yellowgreen']]
+satisfactory = [['yellowgreen','yellow'],['yellow','#FFD12A']] #Finish the rest of these,
+unsatisfactory = [['#FFD12A','orange'],['orange','orangered']] #then build the colormaps, then work with imshow()
+unacceptable = [['orangered','red'],['red']]
+
+
 def colormap_builder(steps_each,colors):
     seg = 1/len(colors)
     steps = seg/steps_each
-    #x = np.arange(0.0, 1.0 + steps, steps)
-    final = [(0, colors[0])]
+    temp = [(0, colors[0])]
 
     for i in range(0,len(colors)):
         for j in range(0,steps_each):
-            final.append((round(j*steps,3), colors[i]))
+            temp.append((round(j*steps,3), colors[i]))
 
-    final[-1] = (1, colors[-1])
+    temp[-1] = (1, colors[-1])
 
-    #steps = seg[1]/steps_each
+    return LinearSegmentedColormap.from_list("", temp,N=256)
 
 
-##    for j in range(1, len(seg)):
-##        x = np.arange(seg[j], seg[j+1] + steps, steps)
+def graph_grad(ISO,g_cmap,s_cmap,uns_cmap,una_cmap,axis,x_lim):
 
-    return final
+    g_extent = [[0,x_lim,0,0.04],[0,x_lim,0.04,0.07]]
+    s_extent = [[0,x_lim,0.07,0.13],[0,x_lim,0.13,0.18]]
+    uns_extent = [[0,x_lim,0.18,0.315],[0,x_lim,0.315,0.44]]
+    una_extent = [[0,x_lim,0.44,0.45],[0,x_lim,0.45,1.1]]
+
+    xv, yv = np.meshgrid(np.linspace(0,0.4,x_lim+1), np.linspace(0,0.4,x_lim+1))
+    zv = yv
+
+    axis.imshow(zv, cmap=g_cmap[0], interpolation='nearest', origin='lower', extent=g_extent[0], aspect='auto')
+    axis.imshow(zv, cmap=g_cmap[1], interpolation='nearest', origin='lower', extent=g_extent[1], aspect='auto')
+
+    axis.imshow(zv, cmap=s_cmap[0], interpolation='nearest', origin='lower', extent=s_extent[0], aspect='auto')
+    axis.imshow(zv, cmap=s_cmap[1], interpolation='nearest', origin='lower', extent=s_extent[1], aspect='auto')
+
+    axis.imshow(zv, cmap=uns_cmap[0], interpolation='nearest', origin='lower', extent=uns_extent[0], aspect='auto')
+    axis.imshow(zv, cmap=uns_cmap[1], interpolation='nearest', origin='lower', extent=uns_extent[1], aspect='auto')
+
+    axis.imshow(zv, cmap=una_cmap[0], interpolation='nearest', origin='lower', extent=una_extent[0], aspect='auto')
+    axis.imshow(zv, cmap=una_cmap[1], interpolation='nearest', origin='lower', extent=una_extent[1], aspect='auto')
+
+    
 
 def prepend(filename, line):
     
@@ -216,29 +240,24 @@ def build_graph(scope, m_class):
     for label in ax1.xaxis.get_ticklabels():
         label.set_rotation(45)
     ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
+    
+##    n_bins = [3, 6, 10, 100]
+##
+##    master = list(plotr) 
+##    master.extend(plotp)
+##    master = np.array(master)
 
-    n_bins = [3, 6, 10, 100]
+    
+    #CALL graph_grad HERE!!!#
 
-    colors = ['green','yellowgreen','yellow']#["green","yellow","orange","red"]
-    c_list = colormap_builder(1,colors)
-    cust_cmap = LinearSegmentedColormap.from_list("", c_list,N=10)
-    print(cust_cmap)
+    graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-1)
 
-    master = list(plotr) 
-    master.extend(plotp)
-    master = np.array(master)
-
-    xv, yv = np.meshgrid(np.linspace(0,0.4,len(dates)), np.linspace(0,0.4,len(dates)))
-    zv = yv
-
-    ax1.imshow(zv, cmap=cust_cmap, interpolation='nearest', origin='lower', extent=[0, len(dates)-1, 0, 0.45], aspect='auto')
-
-    # Erase above the data by filling with white
-    ax1.fill_between(dates, plotp, 5, color='k')
+    
+    #ax1.fill_between(dates, plotp, 5, color='#151515')
     
     
-    ax1.plot(dates, plotr, linewidth=2.2, color='#8B0000', label='Average Vibration Level')
-    ax1.plot(dates, plotp, linewidth=1.4, color='#259ae1', label='Pk to Pk Vibration')
+    ax1.plot(dates, plotr, linewidth=2.2, color='k', label='Average Vibration Level')      # '#8B0000'
+    ax1.plot(dates, plotp, linewidth=2.2, color='#A9A9A9', label='Pk to Pk Vibration')               #'#259ae1'
 
     ax1.legend()
     leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
@@ -266,11 +285,11 @@ def build_graph(scope, m_class):
     plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
 
     plt.xlabel('Date')
-    plt.ylabel('g s')
+    plt.ylabel('Velocity (in/s)')
     plt.title('Machine Health Monitor', color='w')
 
     #ax1.contour(xv, 899, cmap=rvb, origin='image',extent=(100, 10, 0, 0.4))#plotr.min(), plotp.max()])
-    
+    plt.tight_layout()
     plt.show()
 
 
@@ -308,6 +327,8 @@ def build_fft_graph(N,T):
 
     fig, ax = plt.subplots()
     ax.plot(xf,2.0/N * np.abs(yf[:N//2]))
+
+    plt.tight_layout()
     plt.show()
 
 
@@ -316,6 +337,11 @@ def build_fft_graph(N,T):
 filenames = file_search()
 
 filedates = list(set(get_data(filenames)))
+
+g_cmap = [colormap_builder(1,good[0]),colormap_builder(1,good[1])]
+s_cmap = [colormap_builder(1,satisfactory[0]),colormap_builder(1,satisfactory[1])]
+uns_cmap = [colormap_builder(1,unsatisfactory[0]),colormap_builder(1,unsatisfactory[1])]
+una_cmap = [colormap_builder(1,unacceptable[0]),colormap_builder(1,unacceptable[1])]
 
 build_graph(365, 1)
 build_fft_graph(2500,8/2000)
