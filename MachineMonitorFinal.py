@@ -12,27 +12,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import Colormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 # CONSTANTS
 FILE_PREFIX = "data_store/"
 
 good = [['darkgreen','green'],['green','yellowgreen']]
-satisfactory = [['yellowgreen','yellow'],['yellow','#FFD12A']] #Finish the rest of these,
-unsatisfactory = [['#FFD12A','orange'],['orange','orangered']] #then build the colormaps, then work with imshow()
+satisfactory = [['yellowgreen','yellow'],['yellow','#FFD12A']]
+unsatisfactory = [['#FFD12A','orange'],['orange','orangered']]
 unacceptable = [['orangered','red'],['red']]
+cbar = ['green','yellow','orange','red']
 
 
-def colormap_builder(steps_each,colors):
+def colormap_builder(steps_each,colors,multiplier):
     seg = 1/len(colors)
     steps = seg/steps_each
     temp = [(0, colors[0])]
 
     for i in range(0,len(colors)):
         for j in range(0,steps_each):
-            temp.append((round(j*steps,3), colors[i]))
+            temp.append((round(j*steps,12), colors[i]))
+            #cbar.append(((round(j*steps,50)/8 +0.125*multiplier), colors[i]))
 
     temp[-1] = (1, colors[-1])
+
+##    if multiplier == 7:
+##        cbar.append((1, colors[-1]))
+
+    #LOL you really over thought this cbar thing... the proportions that the colors
+    #take up on the colorbar don't need to match that of  the graph (lol).
+    #Just use a list of all of the represented colours and set even proportions to
+    #them (ranging from 0 to 1)
 
     return LinearSegmentedColormap.from_list("", temp,N=256)
 
@@ -247,21 +258,32 @@ def build_graph(scope, m_class):
 ##    master.extend(plotp)
 ##    master = np.array(master)
 
-    
-    #CALL graph_grad HERE!!!#
 
     graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-1)
 
     
-    #ax1.fill_between(dates, plotp, 5, color='#151515')
-    
-    
-    ax1.plot(dates, plotr, linewidth=2.2, color='k', label='Average Vibration Level')      # '#8B0000'
-    ax1.plot(dates, plotp, linewidth=2.2, color='#A9A9A9', label='Pk to Pk Vibration')               #'#259ae1'
 
-    ax1.legend()
-    leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
-    leg.get_frame().set_alpha(0.4)
+##    fig2 = plt.figure(facecolor='#151515')
+##    cax = fig2.add_axes([0.5, 0.1, 0.05, 0.9])
+##    cmapb = mpl.cm.cool
+##    norm = mpl.colors.Normalize(vmin=5, vmax=10)
+##
+##    
+##    cb1.set_label('Some Units')
+
+    #axs = axes_size.Fraction(fraction, ref_size)
+
+    #new_vertical(size, pad=None, pack_start=False, **kwargs)
+    
+    ax1.fill_between(dates, plotp, 5, color='#151515')
+    
+    
+    #ax1.plot(dates, plotr, linewidth=2.2, color='k')#, label='Average Vibration Level')      # '#8B0000'
+    ax1.plot(dates, plotp, linewidth=2.2, color='#A9A9A9')#, label='Pk to Pk Vibration')               #'#259ae1'
+
+    #ax1.legend()
+    #leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
+    #leg.get_frame().set_alpha(0.4)
 
     #ax1.fill_between(dates, plotp, 0, where=(True), cmap=r, edgecolor='#1A4762', alpha=0.6)
     #ax1.fill_between(dates, plotr, 0, where=(True), cmap=r, edgecolor='#1A4762', alpha=0.8)
@@ -288,7 +310,22 @@ def build_graph(scope, m_class):
     plt.ylabel('Velocity (in/s)')
     plt.title('Machine Health Monitor', color='w')
 
-    #ax1.contour(xv, 899, cmap=rvb, origin='image',extent=(100, 10, 0, 0.4))#plotr.min(), plotp.max()])
+    ###COLORBAR START###
+
+    divider = make_axes_locatable(ax1)
+    cax = divider.append_axes("right", size="5%", pad=0.25)
+    cax.set_ylim([0, 1.2*max(plotp)])
+
+    cbar_cmap = LinearSegmentedColormap.from_list("", cbar,N=256)
+
+    cb1 = mpl.colorbar.ColorbarBase(cax, ticks=[0.01,0.33,0.66,0.99], cmap=cbar_cmap, orientation='vertical')
+    cb1.ax.set_yticklabels(['Good','Satisfactory','Unsatisfactory','Unacceptable'])
+    cb1.ax.yaxis.set_tick_params(color='white')
+
+    plt.setp(plt.getp(cb1.ax.axes, 'yticklabels'), color='white')
+
+    ###COLORBAR END###
+
     plt.tight_layout()
     plt.show()
 
@@ -299,7 +336,7 @@ def build_fft_graph(N,T):
     next(csv_reader)
     file.close()
 
-    file = open(FILE_PREFIX + '50HzTXT.txt')
+    file = open(FILE_PREFIX + 'measure80.txt')#'50HzTXT.txt')
     file.readline()
     file.readline()
     
@@ -319,6 +356,8 @@ def build_fft_graph(N,T):
                 gs.append(float(col))
                 break
             count += 1
+
+    
     
     x = sec
     y = gs
@@ -328,8 +367,12 @@ def build_fft_graph(N,T):
     fig, ax = plt.subplots()
     ax.plot(xf,2.0/N * np.abs(yf[:N//2]))
 
+    print(2.0/N * np.abs(yf[:N//2]))
+
     plt.tight_layout()
     plt.show()
+
+
 
 
 #START OF PROGRAM#
@@ -338,13 +381,14 @@ filenames = file_search()
 
 filedates = list(set(get_data(filenames)))
 
-g_cmap = [colormap_builder(1,good[0]),colormap_builder(1,good[1])]
-s_cmap = [colormap_builder(1,satisfactory[0]),colormap_builder(1,satisfactory[1])]
-uns_cmap = [colormap_builder(1,unsatisfactory[0]),colormap_builder(1,unsatisfactory[1])]
-una_cmap = [colormap_builder(1,unacceptable[0]),colormap_builder(1,unacceptable[1])]
+g_cmap = [colormap_builder(1,good[0],0),colormap_builder(1,good[1],1)]
+s_cmap = [colormap_builder(1,satisfactory[0],2),colormap_builder(1,satisfactory[1],3)]
+uns_cmap = [colormap_builder(1,unsatisfactory[0],4),colormap_builder(1,unsatisfactory[1],5)]
+una_cmap = [colormap_builder(1,unacceptable[0],6),colormap_builder(1,unacceptable[1],7)]
 
 build_graph(365, 1)
-build_fft_graph(2500,8/2000)
+build_fft_graph(48,1/500)
+print(cbar)
 
 
 #END OF PROGRAM#
