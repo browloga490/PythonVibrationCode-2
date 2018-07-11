@@ -37,14 +37,6 @@ def colormap_builder(steps_each,colors,multiplier):
 
     temp[-1] = (1, colors[-1])
 
-##    if multiplier == 7:
-##        cbar.append((1, colors[-1]))
-
-    #LOL you really over thought this cbar thing... the proportions that the colors
-    #take up on the colorbar don't need to match that of  the graph (lol).
-    #Just use a list of all of the represented colours and set even proportions to
-    #them (ranging from 0 to 1)
-
     return LinearSegmentedColormap.from_list("", temp,N=256)
 
 
@@ -91,7 +83,6 @@ def file_search():
     
     new_filenames = os.listdir('new_data/')
     filenames.extend(new_filenames)
-    
 
     #Store filenames 
 
@@ -251,44 +242,14 @@ def build_graph(scope, m_class):
     for label in ax1.xaxis.get_ticklabels():
         label.set_rotation(45)
     ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
-    
-##    n_bins = [3, 6, 10, 100]
-##
-##    master = list(plotr) 
-##    master.extend(plotp)
-##    master = np.array(master)
-
 
     graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-1)
-
-    
-
-##    fig2 = plt.figure(facecolor='#151515')
-##    cax = fig2.add_axes([0.5, 0.1, 0.05, 0.9])
-##    cmapb = mpl.cm.cool
-##    norm = mpl.colors.Normalize(vmin=5, vmax=10)
-##
-##    
-##    cb1.set_label('Some Units')
-
-    #axs = axes_size.Fraction(fraction, ref_size)
-
-    #new_vertical(size, pad=None, pack_start=False, **kwargs)
     
     ax1.fill_between(dates, plotp, 5, color='#151515')
     
     
     #ax1.plot(dates, plotr, linewidth=2.2, color='k')#, label='Average Vibration Level')      # '#8B0000'
     ax1.plot(dates, plotp, linewidth=2.2, color='#A9A9A9')#, label='Pk to Pk Vibration')               #'#259ae1'
-
-    #ax1.legend()
-    #leg = ax1.legend(loc=2, ncol=2, prop={'size':14})
-    #leg.get_frame().set_alpha(0.4)
-
-    #ax1.fill_between(dates, plotp, 0, where=(True), cmap=r, edgecolor='#1A4762', alpha=0.6)
-    #ax1.fill_between(dates, plotr, 0, where=(True), cmap=r, edgecolor='#1A4762', alpha=0.8)
-    #ax1.fill_between(dates, plotp, 0, facecolor='#1A4762', edgecolor='#1A4762', alpha=0.6)facecolor='#8B0000'
-    #ax1.fill_between(dates, plotr, 0, facecolor='#8B0000', edgecolor='#1A4762', alpha=0.2)
 
     ax1.xaxis.label.set_color('w')
     ax1.yaxis.label.set_color('w')
@@ -389,7 +350,6 @@ una_cmap = [colormap_builder(1,unacceptable[0],6),colormap_builder(1,unacceptabl
 build_graph(365, 1)
 build_fft_graph(48,1/500)
 print(cbar)
-
 
 #END OF PROGRAM#
 
