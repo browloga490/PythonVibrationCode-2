@@ -270,12 +270,13 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     ax = plt.gca()
     ax.set_ylim([0, 1.2*max(plotp)])
     ax.set_facecolor('#151515')
+    ax.tick_params(direction='out', length=6, width=2, colors='w', grid_alpha=1,labelsize='large')
 
     plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
 
-    plt.xlabel('Date')
-    plt.ylabel('Velocity (in/s)')
-    plt.title('Machine Health Monitor', color='w')
+    plt.xlabel('Date',size='x-large',weight='bold')
+    plt.ylabel('Velocity (in/s)',size='x-large',weight='bold')
+    plt.title('Machine Health Monitor', color='w',size='x-large',weight='bold')
 
     ###COLORBAR START###
 
@@ -286,7 +287,7 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     cbar_cmap = LinearSegmentedColormap.from_list("", cbar,N=256)
 
     cb1 = mpl.colorbar.ColorbarBase(cax, ticks=[0.01,0.33,0.66,0.99], cmap=cbar_cmap, orientation='vertical')
-    cb1.ax.set_yticklabels(['Good','Satisfactory','Unsatisfactory','Unacceptable'])
+    cb1.ax.set_yticklabels(['Good','Satisfactory','Unsatisfactory','Unacceptable'],size='large')
     cb1.ax.yaxis.set_tick_params(color='white')
 
     plt.setp(plt.getp(cb1.ax.axes, 'yticklabels'), color='white')
