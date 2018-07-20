@@ -13,10 +13,13 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.mplot3d import axes3d
 
 
 # CONSTANTS
 FILE_PREFIX = "data_store/"
+LAST_FILE_NUM = 80 #This is set to 80 for now. Change to None when fully opertaional (it should work regardles though)
+NEW_FILE = False
 
 good = [['darkgreen','green'],['green','yellowgreen']]
 satisfactory = [['yellowgreen','yellow'],['yellow','#FFD12A']]
@@ -91,10 +94,16 @@ def file_search():
         for name in new_filenames:
             shutil.move('new_data/'+name, 'data_store/')
         
-        file.truncate(0)
+        file.truncate(0) 
         file.seek(0)
         file.write(str(filenames)+'\n')
         file.close()
+
+    #Add a way to remember the number of the last file name
+
+    temp = filenames[-1]
+    temp = temp.strip('measure')
+    LAST_FILE_NUM = int(temp.strip('.txt'))
 
     return new_filenames
 
@@ -160,14 +169,8 @@ def get_data(filenames):
     return datetrack
 
 
-def build_graph(scope, m_class):
-
-##    if m_class == 1:
-##        good
-##        satisfactory
-##        unsatisfactory
-        
-
+def build_graph(scope, m_class):    #Find a way to incorporate the scope into the name of the graph image
+    
     now = datetime.date.today()
     
     temp = now - datetime.timedelta(days=scope)
@@ -176,6 +179,8 @@ def build_graph(scope, m_class):
     #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
     
     last_date = '03-22-18'
+
+    #for i in range
     
     file = open('master_mem.txt', 'r')
     csv_reader = csv.reader(file)
@@ -191,7 +196,8 @@ def build_graph(scope, m_class):
     plotp = []
 
     fig = plt.figure(facecolor='#151515')
-    ax1 = plt.subplot2grid((1,1), (0,0))
+    #ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1 = fig.add_subplot(111)
 
     dayrmsn.append(temp[0])
     daypkpkn.append(temp[1])
@@ -249,7 +255,7 @@ def build_graph(scope, m_class):
     
     
     #ax1.plot(dates, plotr, linewidth=2.2, color='k')#, label='Average Vibration Level')      # '#8B0000'
-    ax1.plot(dates, plotp, linewidth=2.2, color='#A9A9A9')#, label='Pk to Pk Vibration')               #'#259ae1'
+    ax1.plot(dates, plotp, linewidth=3, color='k')#, label='Pk to Pk Vibration')               #'#259ae1'
 
     ax1.xaxis.label.set_color('w')
     ax1.yaxis.label.set_color('w')
@@ -288,21 +294,32 @@ def build_graph(scope, m_class):
     ###COLORBAR END###
 
     plt.tight_layout()
+    plt.savefig('C1_PKPK.jpg',facecolor='k')#'#151515')
     plt.show()
 
 
-def build_fft_graph(N,T):
+def build_fft_graph(filenames,N,T):
+
+    sec = []
+    gs = []
+    file_list = []
+    
     file = open('storage.txt', 'r+')
     csv_reader = csv.reader(file)
     next(csv_reader)
     file.close()
 
+    if len(filenames) >= 10:
+        file_list = filenames[-10:]
+
+    else:
+        file_list = filenames
+
+    ##START FOR LOOP##
+
     file = open(FILE_PREFIX + 'measure80.txt')#'50HzTXT.txt')
     file.readline()
     file.readline()
-    
-    sec = []
-    gs = []
 
     rows = file.readlines()
 
@@ -319,16 +336,29 @@ def build_fft_graph(N,T):
             count += 1
 
     
+
+    XYZ_list = [] #Consider storing a copy of this list in the storage.txt folder (oh and you've got this :-)
     
     x = sec
     y = gs
     yf = scipy.fftpack.fft(y)
     xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
 
-    fig, ax = plt.subplots()
-    ax.plot(xf,2.0/N * np.abs(yf[:N//2]))
+    temp = [4]*24
 
-    print(2.0/N * np.abs(yf[:N//2]))
+    yn = np.array(temp) 
+    zn = 2.0/N * np.abs(yf[:N//2])
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    ax.plot(xf,yn,zn)
+
+    ##END FOR LOOP##
+
+    ax.set_xlabel('x axis')
+    ax.set_ylabel('y axis')
+    ax.set_zlabel('z axis')
 
     plt.tight_layout()
     plt.show()
@@ -348,7 +378,7 @@ uns_cmap = [colormap_builder(1,unsatisfactory[0],4),colormap_builder(1,unsatisfa
 una_cmap = [colormap_builder(1,unacceptable[0],6),colormap_builder(1,unacceptable[1],7)]
 
 build_graph(365, 1)
-build_fft_graph(48,1/500)
+build_fft_graph(filenames,48,1/500)
 print(cbar)
 
 #END OF PROGRAM#
