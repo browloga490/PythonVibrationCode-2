@@ -176,9 +176,9 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     temp = now - datetime.timedelta(days=scope)
     
     ##THE LINE BELOW SHOULD BE IMPLEMENTED WHEN WE HAVE NEW DATA##
-    #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
+    last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
     
-    last_date = '03-22-18'
+    #last_date = '03-22-18'
 
     #for i in range
     
@@ -205,7 +205,7 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
 
     for row in csv_reader:
 
-        if row[2].strip() >= last_date:
+        if row[2].strip() <= last_date:
         
             if row[2].strip() == dates[len(dates)-1]:
                 
@@ -270,7 +270,7 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     ax = plt.gca()
     ax.set_ylim([0, 1.2*max(plotp)])
     ax.set_facecolor('#151515')
-    ax.tick_params(direction='out', length=6, width=2, colors='w', grid_alpha=1,labelsize='large')
+    ax.tick_params(direction='out', length=6, width=2, colors='w', grid_alpha=0.9,labelsize='large')
 
     plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
 
@@ -281,7 +281,7 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     ###COLORBAR START###
 
     divider = make_axes_locatable(ax1)
-    cax = divider.append_axes("right", size="5%", pad=0.25)
+    cax = divider.append_axes("right", size="5%", pad=0.5)
     cax.set_ylim([0, 1.2*max(plotp)])
 
     cbar_cmap = LinearSegmentedColormap.from_list("", cbar,N=256)
@@ -295,7 +295,7 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     ###COLORBAR END###
 
     plt.tight_layout()
-    plt.savefig('C1_PKPK.jpg',facecolor='k')#'#151515')
+    plt.savefig('C1_PKPK_'+str(scope)+'.jpg',facecolor='k',dpi=200)#'#151515')
     plt.show()
 
 
@@ -362,7 +362,7 @@ def build_fft_graph(filenames,N,T):
     ax.set_zlabel('z axis')
 
     plt.tight_layout()
-    plt.show()
+    plt.show(fig)
 
 
 
@@ -379,6 +379,10 @@ uns_cmap = [colormap_builder(1,unsatisfactory[0],4),colormap_builder(1,unsatisfa
 una_cmap = [colormap_builder(1,unacceptable[0],6),colormap_builder(1,unacceptable[1],7)]
 
 build_graph(365, 1)
+build_graph(31, 1)
+build_graph(93, 1)
+build_graph(186, 1)
+
 build_fft_graph(filenames,48,1/500)
 print(cbar)
 
