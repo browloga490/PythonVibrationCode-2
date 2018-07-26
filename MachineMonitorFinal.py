@@ -14,7 +14,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import axes3d
-
+from matplotlib.pyplot import figure
 
 # CONSTANTS
 FILE_PREFIX = "data_store/"
@@ -43,12 +43,12 @@ def colormap_builder(steps_each,colors,multiplier):
     return LinearSegmentedColormap.from_list("", temp,N=256)
 
 
-def graph_grad(ISO,g_cmap,s_cmap,uns_cmap,una_cmap,axis,x_lim):
+def graph_grad(ISO,g_cmap,s_cmap,uns_cmap,una_cmap,axis,x_lim,y_lim):
 
     g_extent = [[0,x_lim,0,0.04],[0,x_lim,0.04,0.07]]
     s_extent = [[0,x_lim,0.07,0.13],[0,x_lim,0.13,0.18]]
     uns_extent = [[0,x_lim,0.18,0.315],[0,x_lim,0.315,0.44]]
-    una_extent = [[0,x_lim,0.44,0.45],[0,x_lim,0.45,1.1]]
+    una_extent = [[0,x_lim,0.44,0.45],[0,x_lim,0.45,y_lim]]
 
     xv, yv = np.meshgrid(np.linspace(0,0.4,x_lim+1), np.linspace(0,0.4,x_lim+1))
     zv = yv
@@ -157,7 +157,7 @@ def get_data(filenames):
                 print('We have a problem')
             else:
                 date = date_list[0] #make variable "date" the first entry in the date column
-                datetrack.append(date)
+                datetrack.append(date[:6]+'20'+date[6:])
                 #x_axis.extend(dates.datestr2num(date))
                 # where date is '01/02/1991'
                 
@@ -173,12 +173,14 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     
     now = datetime.date.today()
     
-    temp = now - datetime.timedelta(days=scope)
+    last_date = now - datetime.timedelta(days=scope)
     
     ##THE LINE BELOW SHOULD BE IMPLEMENTED WHEN WE HAVE NEW DATA##
-    last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
+    #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
     
     #last_date = '03-22-18'
+
+    #x = datetime.datetime.strptime('03-22-2018', '%m-%d-%Y').date()
 
     #for i in range
     
@@ -187,15 +189,16 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     next(csv_reader)
     next(csv_reader)
     temp = next(csv_reader)
-    print(temp)
+    #print(temp)
     
     dayrmsn = []    
     daypkpkn = []
     dates = []
     plotr = []
     plotp = []
+    #count = 0
 
-    fig = plt.figure(facecolor='#151515')
+    fig = plt.figure(facecolor='#151515',figsize=(10,5))
     #ax1 = plt.subplot2grid((1,1), (0,0))
     ax1 = fig.add_subplot(111)
 
@@ -205,13 +208,53 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
 
     for row in csv_reader:
 
-        if row[2].strip() <= last_date:
-        
-            if row[2].strip() == dates[len(dates)-1]:
+        if row[2].strip() == "END":
+            r = np.mean([float(i) for i in dayrmsn])
+            p = np.mean([float(i) for i in daypkpkn])
+
+            plotr.append(r)
+            plotp.append(p)
+            
+            final = datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date()
+            #print(len(plotp)-len(dates))
+            #print(plotp)
+            #print(dates)
+            for i in range(0, scope - len(dates)):
+                plotr.append(0.0)
+                plotp.append(0.0)
                 
-                dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
-                daypkpkn.append(row[1])
-                
+                date = final - datetime.timedelta(days=i) #Change final to first value found (maybe dates[0]?)
+
+                #Find a way to prepend new dates to the 'dates' list
+                dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
+        else:
+            
+            date = datetime.datetime.strptime(row[2].strip(), '%m-%d-%Y').date()
+
+            if date >= last_date:
+                #print(dates[-1])
+                #print(date.day)
+                #print(dates)
+            
+                if date == datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date():
+                    
+                    dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+                    daypkpkn.append(row[1])
+                    
+                else:
+                    r = np.mean([float(i) for i in dayrmsn]) 
+                    p = np.mean([float(i) for i in daypkpkn])
+
+                    plotr.append(r)
+                    plotp.append(p)
+
+                    dayrmsn = [row[0]]    
+                    daypkpkn = [row[1]]
+
+                    #print(date)
+
+                    dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
+
             else:
                 r = np.mean([float(i) for i in dayrmsn]) 
                 p = np.mean([float(i) for i in daypkpkn])
@@ -222,40 +265,51 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
                 dayrmsn = [row[0]]    
                 daypkpkn = [row[1]]
                 
-                dates.append(row[2].strip())
+                break
 
-        else:
-            r = np.mean([float(i) for i in dayrmsn]) 
-            p = np.mean([float(i) for i in daypkpkn])
+##                dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
+##                print(dates)
+##                print(last_date)
+                
+                
+                
 
-            plotr.append(r)
-            plotp.append(p)
-
-            dayrmsn = [row[0]]    
-            daypkpkn = [row[1]]
-            
-            dates.append(row[2].strip())
 
     file.close()
-    dates.sort()
-    dates.pop(0)
-    print(dates)
+    #dates = list(set(dates))
+    #dates.sort()
+    #dates.pop(0)
+    #dates.pop(0)
+    plotr = list(reversed(plotr))
+    plotp = list(reversed(plotp))
+    dates = list(reversed(dates))
+    #print(dates)
+    #print(plotp)
+    
     
     plotr = np.array(list(reversed(plotr)))
-    plotp = np.array(list(reversed(plotp)))
+    #plotp = np.array(list(reversed(plotp[:len(plotp)-1])))
+
+    #plotp = plotp[:-1]
 
                 
     for label in ax1.xaxis.get_ticklabels():
-        label.set_rotation(45)
+        label.set_rotation(60)
+
     ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
 
-    graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-1)
+    print(len(dates)-scope)
+
+    if scope == 7:
+        graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-1,max(plotp))
+    else:
+        graph_grad(10816,g_cmap,s_cmap,uns_cmap,una_cmap,ax1,len(dates)-2,max(plotp))
     
     ax1.fill_between(dates, plotp, 5, color='#151515')
-    
+
     
     #ax1.plot(dates, plotr, linewidth=2.2, color='k')#, label='Average Vibration Level')      # '#8B0000'
-    ax1.plot(dates, plotp, linewidth=3, color='k')#, label='Pk to Pk Vibration')               #'#259ae1'
+    ax1.plot(dates, plotp, linewidth=2.5, color='k')#, label='Pk to Pk Vibration')               #'#259ae1'
 
     ax1.xaxis.label.set_color('w')
     ax1.yaxis.label.set_color('w')
@@ -271,12 +325,25 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     ax.set_ylim([0, 1.2*max(plotp)])
     ax.set_facecolor('#151515')
     ax.tick_params(direction='out', length=6, width=2, colors='w', grid_alpha=0.9,labelsize='large')
+    plt.tight_layout()
+
+    if scope == 31:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/2))
+    elif scope == 93:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/7))
+    elif scope ==186:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/7))
+    
+    #x_ticks = np.append(ax.get_xticks(), dates[-1])
+    #ax.set_xticks(x_ticks)
+
+    ##WORK ON GETTING THE LAST TICK TO SHOW##
 
     plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
 
-    plt.xlabel('Date',size='x-large',weight='bold')
-    plt.ylabel('Velocity (in/s)',size='x-large',weight='bold')
-    plt.title('Machine Health Monitor', color='w',size='x-large',weight='bold')
+    plt.xlabel('Date',size='xx-large',weight='bold',labelpad=10)
+    plt.ylabel('Velocity (in/s)',size='xx-large',weight='bold',labelpad=10)
+    plt.title('Machine Health Monitor', color='w',size='xx-large',weight='bold')
 
     ###COLORBAR START###
 
@@ -290,10 +357,13 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     cb1.ax.set_yticklabels(['Good','Satisfactory','Unsatisfactory','Unacceptable'],size='large')
     cb1.ax.yaxis.set_tick_params(color='white')
 
-    plt.setp(plt.getp(cb1.ax.axes, 'yticklabels'), color='white')
+    plt.setp(plt.getp(cb1.ax.axes, 'yticklabels'), color='white', weight='bold')
 
     ###COLORBAR END###
 
+    plt.setp(ax1.get_xticklabels(),weight='bold')
+    plt.setp(ax1.get_yticklabels(),weight='bold')
+    
     plt.tight_layout()
     plt.savefig('C1_PKPK_'+str(scope)+'.jpg',facecolor='k',dpi=200)#'#151515')
     plt.show()
@@ -378,10 +448,11 @@ s_cmap = [colormap_builder(1,satisfactory[0],2),colormap_builder(1,satisfactory[
 uns_cmap = [colormap_builder(1,unsatisfactory[0],4),colormap_builder(1,unsatisfactory[1],5)]
 una_cmap = [colormap_builder(1,unacceptable[0],6),colormap_builder(1,unacceptable[1],7)]
 
-build_graph(365, 1)
+build_graph(7, 1)
 build_graph(31, 1)
 build_graph(93, 1)
 build_graph(186, 1)
+
 
 build_fft_graph(filenames,48,1/500)
 print(cbar)
