@@ -38,7 +38,6 @@ def colormap_builder(steps_each,colors,multiplier):
     for i in range(0,len(colors)):
         for j in range(0,steps_each):
             temp.append((round(j*steps,12), colors[i]))
-            #cbar.append(((round(j*steps,50)/8 +0.125*multiplier), colors[i]))
 
     temp[-1] = (1, colors[-1])
 
@@ -100,8 +99,6 @@ def file_search():
         file.seek(0)
         file.write(str(filenames)+'\n')
         file.close()
-
-    #Add a way to remember the number of the last file name
 
     temp = filenames[-1]
     temp = temp.strip('measure')
@@ -171,37 +168,25 @@ def get_data(filenames):
     return datetrack
 
 
-def build_graph(scope, m_class):    #Find a way to incorporate the scope into the name of the graph image
+def build_graph(scope, m_class):
     
     now = datetime.date.today()
     
     last_date = now - datetime.timedelta(days=scope)
-    
-    ##THE LINE BELOW SHOULD BE IMPLEMENTED WHEN WE HAVE NEW DATA##
-    #last_date = str(temp.month) + '-' + str(temp.day) + '-' + str(temp.year)[2:]
-    
-    #last_date = '03-22-18'
-
-    #x = datetime.datetime.strptime('03-22-2018', '%m-%d-%Y').date()
-
-    #for i in range
     
     file = open('master_mem.txt', 'r')
     csv_reader = csv.reader(file)
     next(csv_reader)
     next(csv_reader)
     temp = next(csv_reader)
-    #print(temp)
     
     dayrmsn = []    
     daypkpkn = []
     dates = []
     plotr = []
     plotp = []
-    #count = 0
 
     fig = plt.figure(facecolor='#151515',figsize=(10,5))
-    #ax1 = plt.subplot2grid((1,1), (0,0))
     ax1 = fig.add_subplot(111)
 
     dayrmsn.append(temp[0])
@@ -218,25 +203,19 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
             plotp.append(p)
             
             final = datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date()
-            #print(len(plotp)-len(dates))
-            #print(plotp)
-            #print(dates)
+            
             for i in range(0, scope - len(dates)):
                 plotr.append(0.0)
                 plotp.append(0.0)
                 
                 date = final - datetime.timedelta(days=i) #Change final to first value found (maybe dates[0]?)
 
-                #Find a way to prepend new dates to the 'dates' list
                 dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
         else:
             
             date = datetime.datetime.strptime(row[2].strip(), '%m-%d-%Y').date()
 
             if date >= last_date:
-                #print(dates[-1])
-                #print(date.day)
-                #print(dates)
             
                 if date == datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date():
                     
@@ -268,33 +247,18 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
                 daypkpkn = [row[1]]
                 
                 break
-
-##                dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
-##                print(dates)
-##                print(last_date)
                 
                 
                 
 
 
     file.close()
-    #dates = list(set(dates))
-    #dates.sort()
-    #dates.pop(0)
-    #dates.pop(0)
     plotr = list(reversed(plotr))
     plotp = list(reversed(plotp))
     dates = list(reversed(dates))
-    #print(dates)
-    #print(plotp)
-    
     
     plotr = np.array(list(reversed(plotr)))
-    #plotp = np.array(list(reversed(plotp[:len(plotp)-1])))
-
-    #plotp = plotp[:-1]
-
-                
+    
     for label in ax1.xaxis.get_ticklabels():
         label.set_rotation(60)
 
@@ -500,8 +464,8 @@ def build_bearing_graph(scope, m_class):    #Find a way to incorporate the scope
     plt.setp(ax1.get_yticklabels(),weight='bold')
     
     plt.tight_layout()
-    plt.savefig('C1_PKPK_'+str(scope)+'.jpg',facecolor='k',dpi=200)#'#151515')
-    plt.show()
+    plt.savefig('C1_BEAR_'+str(scope)+'.jpg',facecolor='k',dpi=200)#'#151515')
+    #plt.show()
 
 def build_fft_graph(filenames,N,T):
 
@@ -573,9 +537,9 @@ def build_fft_graph(filenames,N,T):
 
 #START OF PROGRAM#
 
-filenames = file_search()
+#filenames = file_search()
 
-filedates = list(set(get_data(filenames)))
+#filedates = list(set(get_data(filenames)))
 
 g_cmap = [colormap_builder(1,good[0],0),colormap_builder(1,good[1],1)]
 s_cmap = [colormap_builder(1,satisfactory[0],2),colormap_builder(1,satisfactory[1],3)]
@@ -586,10 +550,11 @@ build_graph(7, 1)
 build_graph(31, 1)
 build_graph(93, 1)
 build_graph(186, 1)
+build_bearing_graph(7, 1)
 
 
 #build_fft_graph(filenames,48,1/500)
-print(cbar)
+#print(cbar)
 
 #END OF PROGRAM#
 
