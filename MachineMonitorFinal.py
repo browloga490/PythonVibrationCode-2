@@ -16,6 +16,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib.pyplot import figure
 
+os.chdir(r"C:\Users\Owner\Documents\RVMD Job Stuff\PythonVibrationCode 2")
+
 # CONSTANTS
 FILE_PREFIX = "data_store/"
 LAST_FILE_NUM = 80 #This is set to 80 for now. Change to None when fully opertaional (it should work regardles though)
@@ -81,7 +83,7 @@ def prepend(filename, line):
 
 def file_search(): 
     
-    file = open('storage.txt', 'r+') #Open file to grab list of filenames and next number
+    file = open("storage.txt", 'r+') #Open file to grab list of filenames and next number
     filenames = ast.literal_eval(file.readline()) #Temporary storage of filenames
     
     new_filenames = os.listdir('new_data/')
@@ -365,9 +367,141 @@ def build_graph(scope, m_class):    #Find a way to incorporate the scope into th
     plt.setp(ax1.get_yticklabels(),weight='bold')
     
     plt.tight_layout()
+    plt.savefig('C1_PKPK_'+str(scope)+'.png',facecolor='k',dpi=200)#'#151515')
+    #plt.show()
+
+def build_bearing_graph(scope, m_class):    #Find a way to incorporate the scope into the name of the graph image
+    
+    now = datetime.date.today()
+    
+    last_date = now - datetime.timedelta(days=scope)
+    
+    file = open('master_mem.txt', 'r')
+    csv_reader = csv.reader(file)
+    next(csv_reader)
+    next(csv_reader)
+    temp = next(csv_reader)
+    
+    dayrmsn = []    
+    daypkpkn = []
+    dates = []
+    plotr = []
+    plotp = []
+
+    fig = plt.figure(facecolor='#151515',figsize=(10,5))
+    ax1 = fig.add_subplot(111)
+
+    dayrmsn.append(temp[0])
+    daypkpkn.append(temp[1])
+    dates.append(temp[2].strip())
+
+    for row in csv_reader:
+
+        if row[2].strip() == "END":
+            r = np.mean([float(i) for i in dayrmsn])
+            p = np.mean([float(i) for i in daypkpkn])
+
+            plotr.append(r)
+            plotp.append(p)
+            
+            final = datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date()
+            
+            for i in range(0, scope - len(dates)):
+                plotr.append(0.0)
+                plotp.append(0.0)
+                
+                date = final - datetime.timedelta(days=i) #Change final to first value found (maybe dates[0]?)
+
+                #Find a way to prepend new dates to the 'dates' list
+                dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
+        else:
+            
+            date = datetime.datetime.strptime(row[2].strip(), '%m-%d-%Y').date()
+
+            if date >= last_date:
+            
+                if date == datetime.datetime.strptime(dates[-1], '%m-%d-%Y').date():
+                    
+                    dayrmsn.append(row[0])  #Adding contents of row[0] to a list of Strings
+                    daypkpkn.append(row[1])
+                    
+                else:
+                    r = np.mean([float(i) for i in dayrmsn]) 
+                    p = np.mean([float(i) for i in daypkpkn])
+
+                    plotr.append(r)
+                    plotp.append(p)
+
+                    dayrmsn = [row[0]]    
+                    daypkpkn = [row[1]]
+                    
+                    dates.append('{:02d}'.format(date.month) + '-' + '{:02d}'.format(date.day) + '-' + str(date.year))
+
+            else:
+                r = np.mean([float(i) for i in dayrmsn]) 
+                p = np.mean([float(i) for i in daypkpkn])
+
+                plotr.append(r)
+                plotp.append(p)
+
+                dayrmsn = [row[0]]    
+                daypkpkn = [row[1]]
+                
+                break
+                
+                
+                
+
+
+    file.close()
+    plotr = list(reversed(plotr))
+    plotp = list(reversed(plotp))
+    dates = list(reversed(dates))
+                
+    for label in ax1.xaxis.get_ticklabels():
+        label.set_rotation(60)
+
+    ax1.grid(True, color='w', linestyle=':', linewidth=0.5)
+    
+    ax1.fill_between(dates, plotp, 0, facecolor='b', edgecolor='w')
+
+    ax1.plot(dates, plotp, linewidth=1, color='w')#, label='Pk to Pk Vibration')               #'#259ae1'
+
+    ax1.xaxis.label.set_color('w')
+    ax1.yaxis.label.set_color('w')
+    ax1.spines['bottom'].set_color('grey')
+    ax1.spines['top'].set_color('grey')
+    ax1.spines['left'].set_color('#151515')
+    ax1.spines['right'].set_color('#151515')
+
+    ax1.tick_params(axis='y', colors='w')
+    ax1.tick_params(axis='x', colors='w')
+
+    ax = plt.gca()
+    ax.set_ylim([0, 1.2*max(plotp)])
+    ax.set_facecolor('#151515')
+    ax.tick_params(direction='out', length=6, width=2, colors='w', grid_alpha=0.9,labelsize='large')
+    plt.tight_layout()
+
+    if scope == 31:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/2))
+    elif scope == 93:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/7))
+    elif scope ==186:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(len(dates)/7))
+
+    plt.subplots_adjust(left=0.09, bottom=0.14, right=0.94, top=0.94, wspace=2.0, hspace=0)
+
+    plt.xlabel('Date',size='xx-large',weight='bold',labelpad=10)
+    plt.ylabel('Velocity (in/s)',size='xx-large',weight='bold',labelpad=10)
+    plt.title('Bearing Health Monitor', color='w',size='xx-large',weight='bold')
+
+    plt.setp(ax1.get_xticklabels(),weight='bold')
+    plt.setp(ax1.get_yticklabels(),weight='bold')
+    
+    plt.tight_layout()
     plt.savefig('C1_PKPK_'+str(scope)+'.jpg',facecolor='k',dpi=200)#'#151515')
     plt.show()
-
 
 def build_fft_graph(filenames,N,T):
 
@@ -454,7 +588,7 @@ build_graph(93, 1)
 build_graph(186, 1)
 
 
-build_fft_graph(filenames,48,1/500)
+#build_fft_graph(filenames,48,1/500)
 print(cbar)
 
 #END OF PROGRAM#
